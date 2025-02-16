@@ -1,34 +1,31 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
-import openai
-from dotenv import load_dotenv
 import os
+from openai import OpenAI
+from dotenv import load_dotenv
 
-# Load the OpenAI API key from environment variables
+# Load API Key
 load_dotenv()
-openai.api_key = os.getenv("OPENAI_API_KEY")
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 # Initialize FastAPI
 app = FastAPI()
 
-# Add CORS middleware to allow requests from the frontend
-origins = [
-    "http://localhost:3000",  # Update this if your frontend is running on a different port
-    "http://127.0.0.1:3000",
-]
-
+# CORS Setup
+origins = ["http://localhost:3000", "http://127.0.0.1:3000"]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,  # Allows requests from these origins
+    allow_origins=origins,
     allow_credentials=True,
-    allow_methods=["*"],  # Allows all methods (GET, POST, OPTIONS, etc.)
-    allow_headers=["*"],  # Allows all headers
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
-# Store session context
+# Session Storage
 session_memory = {}
 
+# Request Model
 class ChatRequest(BaseModel):
     session_id: str
     text: str
@@ -36,30 +33,35 @@ class ChatRequest(BaseModel):
 @app.post("/chat")
 async def chat(request: ChatRequest):
     session_id = request.session_id
+    user_input = request.text
 
-    # Retrieve or create chat history
+    # Initialize session history if not exists
     if session_id not in session_memory:
-        session_memory[session_id] = []
-
-    # Append user input to chat history
-    session_memory[session_id].append(f"User: {request.text}")
-
-    # Format context
-    context = "\n".join(session_memory[session_id])
-
-    # Get response from OpenAI API (Using GPT-3.5-turbo model)
-    response = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo",  # Change model to GPT-3.5-turbo
-        messages=[
-            {"role": "developer", "content": "You are a helpful assistant."},  # System message with developer role
-            {"role": "user", "content": context}  # User message
+        print("not in")
+        session_memory[session_id] = [
+            {"role": "system", "content": "You are a helpful AI assistant."}
         ]
+    
+    # if len(session_memory)==0:
+    #     session_memory.append({"role": "system", "content": "You are a helpful AI assistant."})
+
+    # Append user message
+    session_memory[session_id].append({"role": "user", "content": user_input})
+    # session_memory.append({"role": "user", "content": user_input})
+
+    # Debugging: Print session memory
+    print(f"Session Memory for {session_id}: {session_memory[session_id]}")
+
+    # Get AI response
+    response = client.chat.completions.create(
+        model="gpt-3.5-turbo",
+        messages=session_memory[session_id]
     )
 
-    # Access the response correctly using the new 'message' structure
-    bot_response = response['choices'][0]['message']['content']
+    # Extract response correctly
+    bot_response = response.choices[0].message.content
 
-    # Store bot response in session memory
-    session_memory[session_id].append(f"Bot: {bot_response}")
+    # Append bot response
+    session_memory[session_id].append({"role": "assistant", "content": bot_response})
 
     return {"response": bot_response}

@@ -1,21 +1,36 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import axios from "axios";
 import { v4 as uuidv4 } from "uuid";
 
 export default function Chatbot() {
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState([]);
-  const sessionId = uuidv4(); // Unique session ID
+  const [sessionId, setSessionId] = useState(null);
+
+  // Run only on client-side after the component mounts
+  useEffect(() => {
+    // Clear localStorage on page refresh
+    localStorage.removeItem("session_id");
+
+    // Create a new session ID and store it in localStorage
+    const newSessionId = uuidv4();
+    localStorage.setItem("session_id", newSessionId);
+    setSessionId(newSessionId);
+  }, []); // Empty dependency array to run this once when the component mounts
 
   const sendMessage = async () => {
-    const res = await axios.post("http://127.0.0.1:8000/chat", {
-      session_id: sessionId,
-      text: input,
-    });
+    if (sessionId) {
+      const res = await axios.post("http://127.0.0.1:8000/chat", {
+        session_id: sessionId,
+        text: input,
+      });
 
-    setMessages([...messages, { user: input, bot: res.data.response }]);
-    setInput("");
+      setMessages([...messages, { user: input, bot: res.data.response }]);
+      setInput("");
+    }
   };
+
+  if (!sessionId) return <div>Loading...</div>; // Show loading state while sessionId is being set
 
   return (
     <div className="p-4">
