@@ -31,6 +31,7 @@ export default function Chatbot() {
 
   return (
     <div className="chat-container">
+        <h1>Chatbot :)</h1>
       <div className="chat-card">
       <div className="chat-messages">
         {messages.map((msg, index) => (

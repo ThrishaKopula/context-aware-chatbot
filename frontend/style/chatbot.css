@@ -11,8 +11,11 @@
   position: fixed; /* Ensure it stays fullscreen */
   top: 0;
   left: 0;
+  flex-direction: column;
  }
-  
+  h1 {
+    color: #DAD2D8;
+  }
   /* Chat Card */
   .chat-card {
     width: 400px;
