@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { v4 as uuidv4 } from "uuid";
+import "../style/chatbot.css";
 
 export default function Chatbot() {
   const [input, setInput] = useState("");
@@ -33,18 +34,34 @@ export default function Chatbot() {
   if (!sessionId) return <div>Loading...</div>; // Show loading state while sessionId is being set
 
   return (
-    <div className="p-4">
-      <div className="border p-4 h-96 overflow-auto">
-        {messages.map((msg, index) => (
-          <p key={index}><b>You:</b> {msg.user}<br /><b>Bot:</b> {msg.bot}</p>
-        ))}
+    <div className="chat-container">
+      {/* Chat Card */}
+      <div className="chat-card">
+        {/* Chat Messages */}
+        <div className="chat-messages">
+          {messages.map((msg, index) => (
+            <div key={index} className="message">
+              {/* User Message */}
+              <div className="user-message">{msg.user}</div>
+              {/* Bot Message */}
+              <div className="bot-message">{msg.bot}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* Input Area */}
+        <div className="chat-input-container">
+          <input
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            className="chat-input"
+            placeholder="Type a message..."
+          />
+          <button onClick={sendMessage} className="send-button">
+            Send
+          </button>
+        </div>
       </div>
-      <input 
-        value={input} 
-        onChange={(e) => setInput(e.target.value)} 
-        className="border p-2"
-      />
-      <button onClick={sendMessage} className="bg-blue-500 text-white p-2 ml-2">Send</button>
     </div>
   );
 }
