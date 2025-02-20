@@ -1,11 +1,17 @@
 /* Center the chat container */
 .chat-container {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 100vh;
-    background-color: #143642; /* Light gray */
-  }
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  width: 100vw; /* Make sure it covers the full width */
+  background-color: #143642; /* Background color */
+  margin: 0; /* Remove any default margin */
+  padding: 0; /* Remove padding */
+  position: fixed; /* Ensure it stays fullscreen */
+  top: 0;
+  left: 0;
+ }
   
   /* Chat Card */
   .chat-card {
