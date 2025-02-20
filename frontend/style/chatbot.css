@@ -28,18 +28,27 @@
     flex-direction: column;
     gap: 10px;
   }
+
   
-  /* User Message */
+  /* Message Container */
+  .message {
+    display: flex;
+    flex-direction: column;
+    /* max-width: 75%; */
+  }
+  
+  /* User Message (Right Aligned) */
   .user-message {
     align-self: flex-end;
-    background: #3b82f6; /* Blue */
+    background: #0F8B8D; /* Blue */
     color: white;
     padding: 10px;
     border-radius: 10px;
     max-width: 75%;
+    text-align: left;
   }
   
-  /* Bot Message */
+  /* Bot Message (Left Aligned) */
   .bot-message {
     align-self: flex-start;
     background: #e5e7eb; /* Light gray */
@@ -47,7 +56,24 @@
     padding: 10px;
     border-radius: 10px;
     max-width: 75%;
+    text-align: left;
   }
+  
+  /* Labels for User and Bot */
+  .user-label {
+    align-self: flex-end;
+    font-size: 12px;
+    color: gray;
+    margin-bottom: 3px;
+  }
+  
+  .bot-label {
+    align-self: flex-start;
+    font-size: 12px;
+    color: gray;
+    margin-bottom: 3px;
+  }
+  
   
   /* Input and Button */
   .chat-input-container {
