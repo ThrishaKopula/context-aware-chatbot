@@ -6,7 +6,6 @@ from openai import OpenAI
 from dotenv import load_dotenv
 import chromadb
 from faq_retrieval import FAQRetriever
-import random
 
 # Load API Key
 load_dotenv()
@@ -48,25 +47,17 @@ async def chat(request: ChatRequest):
             {"role": "system", "content": "You are a helpful AI assistant."}
         ]
     
-    # Retrieve FAQ-based responses
-    faq_answers = faq_retriever.get_best_answer(user_input)
+    # Retrieve FAQ-based responses with conversation context
+    bot_response = faq_retriever.get_best_answer(user_input, session_memory[session_id])
 
-    if faq_answers and faq_answers != ["Sorry, I don't have an answer for that."]:
-        bot_response = random.choice(faq_answers)
-    else:
-        # Construct prompt with the query when FAQ doesn't have an answer
-        prompt = f"User: {user_input}\nAI:"
-
+    if bot_response == "Sorry, I don't have an answer for that.":
         # Append user message
         session_memory[session_id].append({"role": "user", "content": user_input})
-
-        # Debugging: Print session memory
-        print(f"Session Memory for {session_id}: {session_memory[session_id]}")
 
         # Get AI response from OpenAI API
         response = client.chat.completions.create(
             model="gpt-3.5-turbo",
-            messages=session_memory[session_id] + [{"role": "system", "content": prompt}]
+            messages=session_memory[session_id]
         )
 
         # Extract AI-generated response
