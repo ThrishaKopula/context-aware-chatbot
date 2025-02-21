@@ -4,6 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import os
 from openai import OpenAI
 from dotenv import load_dotenv
+import chromadb
 
 # Load API Key
 load_dotenv()
@@ -12,6 +13,8 @@ client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 # Initialize FastAPI
 app = FastAPI()
 
+chroma_client = chromadb.PersistentClient(path="./vector_store")
+faq_collection = chroma_client.get_collection("faq")
 # CORS Setup
 origins = ["http://localhost:3000", "http://127.0.0.1:3000"]
 app.add_middleware(
@@ -42,8 +45,15 @@ async def chat(request: ChatRequest):
             {"role": "system", "content": "You are a helpful AI assistant."}
         ]
     
-    # if len(session_memory)==0:
-    #     session_memory.append({"role": "system", "content": "You are a helpful AI assistant."})
+    retrieved_docs = faq_collection.query(
+        query_texts=[user_input],
+        n_results=1
+    )
+
+    retrieved_text = retrieved_docs["documents"][0][0] if retrieved_docs["documents"] else ""
+
+    # Construct prompt with retrieved text
+    prompt = f"Context: {retrieved_text}\nUser: {user_input}\nAI:"
 
     # Append user message
     session_memory[session_id].append({"role": "user", "content": user_input})
@@ -55,7 +65,7 @@ async def chat(request: ChatRequest):
     # Get AI response
     response = client.chat.completions.create(
         model="gpt-3.5-turbo",
-        messages=session_memory[session_id]
+        messages=session_memory[session_id] + [{"role": "system", "content": prompt}]
     )
 
     # Extract response correctly
