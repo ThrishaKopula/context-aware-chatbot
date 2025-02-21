@@ -1,6 +1,7 @@
 # Context-Aware Chatbot
 
-This is a context-aware chatbot application that uses a backend powered by OpenAI and a frontend that communicates with the backend to provide an interactive chatbot experience.
+This is a context-aware mental health chatbot application that uses a backend powered by OpenAI and a frontend that communicates with the backend to provide an interactive chatbot experience.
+Dataset used: https://www.kaggle.com/datasets/elvis23/mental-health-conversational-data?resource=download
 
 ## Prerequisites
 
