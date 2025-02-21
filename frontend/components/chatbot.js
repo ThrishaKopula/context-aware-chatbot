@@ -1,12 +1,17 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { v4 as uuidv4 } from "uuid";
-// import "../style/chatbot.css"; // Make sure this is imported in _app.js if it's global
 
 export default function Chatbot() {
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState([]);
   const [sessionId, setSessionId] = useState(null);
+  const chatEndRef = useRef(null); // Ref for auto-scrolling
+
+  // Scroll to the latest message whenever messages update
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
 
   useEffect(() => {
     localStorage.removeItem("session_id");
@@ -16,7 +21,7 @@ export default function Chatbot() {
   }, []);
 
   const sendMessage = async () => {
-    if (sessionId) {
+    if (sessionId && input.trim() !== "") {
       const res = await axios.post("http://127.0.0.1:8000/chat", {
         session_id: sessionId,
         text: input,
@@ -31,29 +36,30 @@ export default function Chatbot() {
 
   return (
     <div className="chat-container">
-        <h1>Chatbot :)</h1>
+      <h1>Welcome to Supportly</h1>
       <div className="chat-card">
-      <div className="chat-messages">
-        {messages.map((msg, index) => (
+        <div className="chat-messages">
+          {messages.map((msg, index) => (
             <div key={index} className="message">
-            {/* User Label */}
-            <div className="user-label">User</div>
-            <div className="user-message">{msg.user}</div>
+              {/* User Label */}
+              <div className="user-label">User</div>
+              <div className="user-message">{msg.user}</div>
 
-            {/* Bot Label */}
-            <div className="bot-label">Bot</div>
-            <div className="bot-message">{msg.bot}</div>
+              {/* Bot Label */}
+              <div className="bot-label">Bot</div>
+              <div className="bot-message">{msg.bot}</div>
             </div>
-        ))}
+          ))}
+          {/* Invisible div to ensure auto-scroll */}
+          <div ref={chatEndRef} />
         </div>
-
 
         <div className="chat-input-container">
           <input
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => {
-                if (e.key === "Enter") sendMessage();
+              if (e.key === "Enter") sendMessage();
             }}
             className="chat-input"
             placeholder="Type a message..."
