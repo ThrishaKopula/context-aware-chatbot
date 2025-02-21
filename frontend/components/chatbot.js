@@ -24,7 +24,7 @@ export default function Chatbot() {
     if (sessionId && input.trim() !== "") {
       const res = await axios.post("http://127.0.0.1:8000/chat", {
         session_id: sessionId,
-        text: input,
+        message: input,
       });
 
       setMessages([...messages, { user: input, bot: res.data.response }]);
