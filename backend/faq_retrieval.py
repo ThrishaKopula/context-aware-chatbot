@@ -1,29 +1,40 @@
-import json
 import chromadb
-# from langchain.embeddings import OpenAIEmbeddings
-# from langchain.vectorstores import Chroma
-# from langchain.schema import Document
-from langchain.text_splitter import RecursiveCharacterTextSplitter
+import json
+from sentence_transformers import SentenceTransformer
 
-# Load FAQ data
-def load_faq():
-    with open("faq.json", "r") as f:
-        return json.load(f)
+class FAQRetriever:
+    def __init__(self, db_path="./vector_store"):
+        self.client = chromadb.PersistentClient(path=db_path)
+        self.collection = self.client.get_or_create_collection("faq")
+        self.model = SentenceTransformer("all-MiniLM-L6-v2")  # Efficient embedding model
+        self.load_faq()
 
-# Initialize ChromaDB
-chroma_client = chromadb.PersistentClient(path="./vector_store")
-collection = chroma_client.get_or_create_collection("faq")
+    def load_faq(self):
+        """Loads FAQ data into ChromaDB"""
+        with open("faq.json", "r") as file:
+            faq_data = json.load(file)
 
-# Load and store FAQs
-faq_data = load_faq()
-text_splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=50)
+        for i, entry in enumerate(faq_data):
+            questions = entry["question"]
+            answers = entry["answer"]
 
-# Process each FAQ
-for item in faq_data:
-    collection.add(
-        documents=[item["question"] + " " + item["answer"]],
-        metadatas=[{"source": "faq"}],
-        ids=[item["question"]]
-    )
+            # Store multiple variations of questions in the vector DB
+            for question in questions:
+                embedding = self.model.encode(question).tolist()
+                self.collection.add(
+                    ids=[f"q_{i}_{questions.index(question)}"],
+                    embeddings=[embedding],
+                    documents=[json.dumps(answers)]  # Store multiple answers
+                )
 
-print("FAQ data stored in vector DB!")
+    def get_best_answer(self, query):
+        """Retrieves the best matching FAQ answer"""
+        query_embedding = self.model.encode(query).tolist()
+        results = self.collection.query(query_embeddings=[query_embedding], n_results=3)
+
+        if results["documents"]:
+            answers = json.loads(results["documents"][0][0])  # Extract stored answers
+            return answers  # Return all variations of the answer
+        else:
+            return ["Sorry, I don't have an answer for that."]
+

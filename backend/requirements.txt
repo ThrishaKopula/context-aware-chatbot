@@ -5,3 +5,5 @@ python-dotenv
 chromadb
 langchain
 tiktoken
+sentence-transformers
+tf-keras
